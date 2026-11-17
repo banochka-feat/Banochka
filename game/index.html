@@ -33,6 +33,7 @@
     </div>
     <div class="gold"><i class="coin"></i><span id="gold">0</span></div>
   </div>
+  <div class="souls" id="soulsBox" hidden>👻 <span id="souls">0</span></div>
   <div class="zone-line"><span id="zoneName">Проклятый лес</span> · <span id="wave">Волна 1/10</span></div>
   <div class="enemy-box" id="enemyBox">
     <div class="enemy-name" id="enemyName">Скелет</div>
@@ -40,11 +41,18 @@
   </div>
 </div>
 
-<div class="hud-bottom">
-  <button class="sbtn" id="potionBtn"><span class="ico">🧪</span><b id="potionCount">1</b></button>
-  <button class="block-btn" id="blockBtn"><span class="ico">🛡</span>БЛОК</button>
+<div class="side-btns">
   <button class="sbtn" id="shopBtn"><span class="ico">⚒</span><b>Лавка</b></button>
   <button class="sbtn" id="mapBtn"><span class="ico">🗺</span><b>Карта</b></button>
+</div>
+
+<div class="combo" id="combo"><span id="comboN">0</span><small>КОМБО</small><em id="comboX">×1.0</em></div>
+
+<div class="hud-bottom">
+  <button class="sbtn" id="potionBtn"><span class="ico">🧪</span><b id="potionCount">1</b></button>
+  <button class="sbtn skill" id="fireBtn"><span class="ico">💥</span><b>3 ур</b><i class="cdmask"></i></button>
+  <button class="block-btn" id="blockBtn"><span class="ico">🛡</span>БЛОК</button>
+  <button class="sbtn skill" id="rageBtn"><span class="ico">⚡</span><b>7 ур</b><i class="cdmask"></i></button>
 </div>
 
 <div class="banner" id="banner"></div>
@@ -53,9 +61,10 @@
 <div class="overlay" id="hint">
   <div class="panel">
     <h1>ТЁМНЫЙ ПУТЬ</h1>
-    <p>⚔ <b>Тапай по экрану</b> — бей врага.</p>
-    <p>🛡 Враг <b>краснеет и замахивается</b> — жми <b>БЛОК</b> в последний момент. Поймал момент — <b>парирование</b>: враг оглушён, а твои удары по нему сильнее.</p>
-    <p>⚒ За золото покупай улучшения в <b>Лавке</b>. Каждая 10-я волна — <b>босс</b>.</p>
+    <p>⚔ <b>Тапай</b> — бей врага. Бей без остановки — растёт <b>комбо</b>.</p>
+    <p>🛡 <b class="r">Красный «!»</b> — жми <b>БЛОК</b>. Нажал, когда «!» стал голубым, — <b>парирование</b>: враг оглушён.</p>
+    <p>💨 <b class="v">Фиолетовый «!!»</b> — удар не блокируется. <b>Свайпни</b> влево или вправо, чтобы увернуться.</p>
+    <p>💥 ⚡ Навыки откроются на 3 и 7 уровне. ★ Элиты и боссы дают <b>сундук с реликвией</b>.</p>
     <button class="big" id="startBtn">В путь</button>
   </div>
 </div>
@@ -71,6 +80,15 @@
   </div>
 </div>
 
+<!-- Chest -->
+<div class="overlay hidden" id="chest">
+  <div class="panel wide">
+    <h1 id="chestTitle">Сундук</h1>
+    <p class="center muted">Выбери одну реликвию</p>
+    <div class="cards" id="chestCards"></div>
+  </div>
+</div>
+
 <!-- Shop -->
 <div class="sheet" id="shop">
   <div class="sheet-head"><h2>Лавка кузнеца</h2><div class="gold"><i class="coin"></i><span id="shopGold">0</span></div><button class="x" data-close>✕</button></div>
@@ -81,6 +99,10 @@
 <div class="sheet" id="map">
   <div class="sheet-head"><h2>Карта</h2><button class="x" data-close>✕</button></div>
   <div id="mapList"></div>
+  <div class="altar" id="altar"></div>
+  <h3 class="sub">Реликвии</h3>
+  <div class="relics" id="relicList"></div>
+  <h3 class="sub">Летопись</h3>
   <div class="stats" id="stats"></div>
   <button class="mute" id="muteBtn">🔊 Звук: вкл</button>
 </div>
