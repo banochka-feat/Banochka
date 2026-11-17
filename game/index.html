@@ -16,7 +16,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap&subset=cyrillic" rel="stylesheet">
-<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="style.css?v=6">
 </head>
 <body>
 <canvas id="cv"></canvas>
@@ -68,6 +68,7 @@
     <p class="center">Сложность (можно сменить в «Карте»):</p>
     <div class="diff-box" id="hintDiff"></div>
     <button class="big" id="startBtn">В путь</button>
+    <div class="ver">версия 6</div>
   </div>
 </div>
 
@@ -111,6 +112,18 @@
   <button class="mute" id="muteBtn">🔊 Звук: вкл</button>
 </div>
 
-<script src="game.js"></script>
+<script>
+  // Auto-update: if a newer build is published, reload past the browser cache.
+  window.BUILD = '6';
+  fetch('version.json?t=' + Date.now(), { cache: 'no-store' })
+    .then(function (r) { return r.json(); })
+    .then(function (v) {
+      if (v.build && v.build !== window.BUILD && sessionStorage.getItem('dp-reload') !== v.build) {
+        sessionStorage.setItem('dp-reload', v.build);
+        location.replace('./?v=' + v.build);
+      }
+    }).catch(function () {});
+</script>
+<script src="game.js?v=6"></script>
 </body>
 </html>

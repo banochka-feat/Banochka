@@ -175,3 +175,4 @@ h3.sub { font-size: 10px; color: var(--gold); margin: 14px 2px 8px; }
 .diff span { font-size: 18px; }
 .diff small { font-size: 7px; color: var(--muted); }
 .diff.on { box-shadow: inset 0 0 0 2px var(--gold); color: var(--gold); }
+.ver { margin-top: 10px; font-size: 7px; color: var(--muted); text-align: center; }
