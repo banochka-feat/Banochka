@@ -1480,7 +1480,7 @@ function loop(now) {
 resize();
 hp = pMaxHp();
 $('enemyBox').classList.add('hidden');
-if (S.seenHint && S.seenV2) { $('hint').classList.add('hidden'); paused = false; }
+if (S.kills > 0) $('startBtn').textContent = 'Продолжить';  // start menu shows on every launch
 // gold earned while away (up to 8 hours)
 if (S.lastSeen && S.kills > 0) {
   const mins = Math.min(480, (Date.now() - S.lastSeen) / 60000);
