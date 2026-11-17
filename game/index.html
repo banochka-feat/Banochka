@@ -16,7 +16,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap&subset=cyrillic" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=6">
+<link rel="stylesheet" href="style.css?v=7">
 </head>
 <body>
 <canvas id="cv"></canvas>
@@ -68,7 +68,7 @@
     <p class="center">Сложность (можно сменить в «Карте»):</p>
     <div class="diff-box" id="hintDiff"></div>
     <button class="big" id="startBtn">В путь</button>
-    <div class="ver">версия 6</div>
+    <div class="ver">версия 7</div>
   </div>
 </div>
 
@@ -81,6 +81,19 @@
     <button class="big" id="reviveBtn">Вернуться к костру</button>
     <button class="big ghost" id="deathShopBtn">Лавка</button>
   </div>
+</div>
+
+<!-- Dialogue -->
+<div class="dlg hidden" id="dlg">
+  <div class="dlg-box">
+    <canvas id="dlgPic" width="56" height="56"></canvas>
+    <div class="dlg-body">
+      <div class="dlg-name" id="dlgName"></div>
+      <div class="dlg-text" id="dlgText"></div>
+    </div>
+    <div class="dlg-next">▼</div>
+  </div>
+  <button class="dlg-skip" id="dlgSkip">Пропустить ›</button>
 </div>
 
 <!-- Chest -->
@@ -107,6 +120,8 @@
   <div class="altar" id="altar"></div>
   <h3 class="sub">Реликвии</h3>
   <div class="relics" id="relicList"></div>
+  <h3 class="sub">Сюжет</h3>
+  <div class="story-list" id="storyList"></div>
   <h3 class="sub">Летопись</h3>
   <div class="stats" id="stats"></div>
   <button class="mute" id="muteBtn">🔊 Звук: вкл</button>
@@ -114,7 +129,7 @@
 
 <script>
   // Auto-update: if a newer build is published, reload past the browser cache.
-  window.BUILD = '6';
+  window.BUILD = '7';
   fetch('version.json?t=' + Date.now(), { cache: 'no-store' })
     .then(function (r) { return r.json(); })
     .then(function (v) {
@@ -124,6 +139,6 @@
       }
     }).catch(function () {});
 </script>
-<script src="game.js?v=6"></script>
+<script src="game.js?v=7"></script>
 </body>
 </html>

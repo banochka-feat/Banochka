@@ -79,6 +79,35 @@ const zoneName = (zi) => { const r = Math.floor(zi / ZONES.length); return zoneO
 // heavy = chance of an unblockable (purple) attack
 // =========================================================
 const SPRITES = {
+  spirit: { name: 'Искра', hp: 1, dmg: 1, spd: 1, heavy: 0, pal: { y: '#ffd24a', o: '#ff7a1a', w: '#fff6c8', k: '#3a1a10' }, map: [
+    '.....y......',
+    '....yy......',
+    '....yoy..y..',
+    '...yooy.yy..',
+    '..yoooyyoy..',
+    '..yoowooooy.',
+    '.yoowwwwooy.',
+    '.yowwwwwwoy.',
+    '.yowkwwkwoy.',
+    '.yowwwwwwoy.',
+    '.yowwkkwwoy.',
+    '..yowwwwoy..',
+    '...yyyyyy...',
+  ] },
+  hero: { name: 'Ты', hp: 1, dmg: 1, spd: 1, heavy: 0, pal: { m: '#6f7286', l: '#9aa0b4', k: '#151219', y: '#ffd24a', r: '#7a1d17' }, map: [
+    '....mmmm....',
+    '...mllllm...',
+    '..mllllllm..',
+    '..mmmmmmmm..',
+    '..mkkkkkkm..',
+    '..mkykkykm..',
+    '..mmmmmmmm..',
+    '..mllmmllm..',
+    '...mmmmmm...',
+    '.rrmmmmmmrr.',
+    'rrrrrrrrrrrr',
+    'rrrrrrrrrrrr',
+  ] },
   skeleton: { name: 'Скелет', hp: 1, dmg: 1, spd: 1, heavy: 0.1, pal: { w: '#e8e2cf', s: '#a8a08a', k: '#2a2420', r: '#ff3b2f', b: '#7a5a3a' }, map: [
     '.....wwww.....',
     '....wwwwww....',
@@ -279,7 +308,7 @@ const DEFAULT = {
   up: { sword: 0, armor: 0, crit: 0, torch: 0, leech: 0 },
   relics: {}, souls: 0, rebirths: 0,
   kills: 0, bosses: 0, deaths: 0, parries: 0, dodges: 0, elites: 0, bestWave: 1, bestCombo: 0,
-  diff: 'easy', muted: false, seenHint: false, seenV2: false, lastSeen: 0,
+  diff: 'easy', seen: {}, muted: false, seenHint: false, seenV2: false, lastSeen: 0,
 };
 let S = load();
 function load() {
@@ -287,7 +316,7 @@ function load() {
     const raw = localStorage.getItem(SAVE_KEY);
     if (raw) {
       const d = JSON.parse(raw);
-      return Object.assign({}, DEFAULT, d, { up: Object.assign({}, DEFAULT.up, d.up || {}), relics: Object.assign({}, d.relics || {}) });
+      return Object.assign({}, DEFAULT, d, { up: Object.assign({}, DEFAULT.up, d.up || {}), relics: Object.assign({}, d.relics || {}), seen: Object.assign({}, d.seen || {}) });
     }
   } catch (e) { /* ignore */ }
   return JSON.parse(JSON.stringify(DEFAULT));
@@ -560,7 +589,10 @@ function spawnEnemy() {
   $('enemyName').className = 'enemy-name' + (isBoss ? ' boss' : elite ? ' elite' : '');
   $('enemyBox').classList.remove('hidden');
   updateHud();
-  if (isBoss) { showBanner('БОСС', name); sfx('boss'); shake = 0.3; }
+  if (isBoss) {
+    showBanner('БОСС', name); sfx('boss'); shake = 0.3;
+    if (S.zone < ZONES.length) setTimeout(() => story('boss' + S.zone + '_pre'), 900);
+  } else if (elite) setTimeout(() => tip('elite'), 400);
 }
 
 const easeOut = (t) => 1 - Math.pow(1 - clamp(t, 0, 1), 3);
@@ -612,6 +644,9 @@ function startWindup() {
   enemy.dodged = false;
   setPhase('windup');
   sfx(enemy.kind === 'heavy' ? 'heavy' : 'windup');
+  const e = enemy;
+  const restart = () => { if (enemy === e && e.phase === 'windup') e.t = 0; };
+  tip(enemy.kind === 'heavy' ? 'heavy' : 'windup', restart);
 }
 
 function enemyStrike() {
@@ -669,10 +704,15 @@ function killEnemy() {
     if (S.zone > S.maxZone) S.maxZone = S.zone;
     S.potions++;
     spawnTimer = 99;
+    const beaten = S.zone - 1;
     setTimeout(() => openChest('Сундук босса', () => {
-      showBanner('ПОБЕДА!', 'Новая земля: ' + zoneName(S.zone));
-      bgCanvas = drawBackground(S.zone); weather = [];
-      spawnTimer = 1.5;
+      const go = () => {
+        bgCanvas = drawBackground(S.zone); weather = [];
+        showBanner('ПОБЕДА!', 'Новая земля: ' + zoneName(S.zone));
+        zoneStory();
+        spawnTimer = 1.5;
+      };
+      if (beaten < ZONES.length) story('boss' + beaten + '_post', go); else go();
     }), 700);
   } else {
     S.wave++;
@@ -692,6 +732,8 @@ function addXp(x) {
     const lv = S.lvl;
     const unlocked = Object.values(SKILLS).find((s) => s.unlock === lv);
     setTimeout(() => showBanner('УРОВЕНЬ ' + lv, unlocked ? 'Новый навык: ' + unlocked.name + '!' : 'Сила и здоровье выросли'), 250);
+    if (lv >= 3) setTimeout(() => tip('fire'), 1400);
+    if (lv >= 7) setTimeout(() => tip('rage'), 1400);
     sfx('level');
   }
 }
@@ -715,6 +757,7 @@ function attack() {
   enemy.flash = 0.08; enemy.flinch = 0.14;
   combo++; comboTimer = 1.6;
   S.bestCombo = Math.max(S.bestCombo, combo);
+  if (combo === 20) tip('combo');
   if (pLeech() > 0) heal(dmg * pLeech(), false);
   const nx = (r.x + r.w * rand(0.3, 0.7)) / LW, ny = (r.y + r.h * rand(0.25, 0.55)) / LH;
   floatNum(nf(dmg), crit ? 'crit' : (stunned ? 'word' : ''), nx, ny);
@@ -809,10 +852,12 @@ function revive() {
   $('death').classList.add('hidden');
   $('enemyBox').classList.add('hidden');
   save(); updateHud();
+  tip('death');
 }
 
 // ---------- Chest with relic choice ----------
 function openChest(title, after) {
+  if (!S.seen.tip_chest) return tip('chest', () => openChest(title, after));
   paused = true;
   $('chestTitle').textContent = title;
   const ids = Object.keys(RELICS).sort(() => Math.random() - 0.5).slice(0, 3);
@@ -828,7 +873,7 @@ function openChest(title, after) {
       S.relics[id] = rl(id) + 1;
       save(); sfx('buy');
       $('chest').classList.add('hidden');
-      paused = false;
+      tryResume();
       hp = Math.min(hp, pMaxHp());
       updateHud();
       showBanner(R.name, R.desc);
@@ -838,6 +883,190 @@ function openChest(title, after) {
   });
   $('chest').classList.remove('hidden');
   sfx('chest');
+}
+
+// =========================================================
+// STORY & DIALOGUE
+// =========================================================
+const CAST = {
+  spirit:   { name: 'Искра', color: '#ffd24a', sprite: 'spirit' },
+  hero:     { name: 'Ты', color: '#cfd6e6', sprite: 'hero' },
+  narr:     { name: '', color: '#a99cb8' },
+  wolfking: { name: 'Мракогрыз', color: '#ff6a5a', sprite: 'wolf', tint: BOSSES.wolfking.tint },
+  lich:     { name: 'Лич Безгласный', color: '#9fe8ff', sprite: 'skeleton', tint: BOSSES.lich.tint },
+  demon:    { name: 'Пепельный Владыка', color: '#ff8b3d', sprite: 'imp', tint: BOSSES.demon.tint },
+  darklord: { name: 'Король Без Солнца', color: '#ff6ad5', sprite: 'knight', tint: BOSSES.darklord.tint },
+};
+const STORY = {
+  prologue: { title: 'Пролог', lines: [
+    ['narr', 'Сто лет назад Король Без Солнца похитил Солнечное Сердце, и над землями Ардейна взошла вечная ночь.'],
+    ['narr', 'Орден Факела, что хранил Сердце, пал. Уцелел лишь один рыцарь — ты.'],
+    ['spirit', 'Эй… ты меня слышишь? Я Искра — последний огонь Ордена. Я живу в твоём факеле.'],
+    ['hero', 'Искра? Я думал, огонь Ордена угас вместе с братьями.'],
+    ['spirit', 'Почти угас. Но пока я горю — у мира есть шанс. Видишь замок за лесом? Это Цитадель Тьмы. Там спрятано Сердце.'],
+    ['spirit', 'Путь будет долгим. Я буду рядом и подскажу, как выжить. Вперёд, рыцарь!'],
+  ] },
+  zone0: { title: 'Глава 1. Проклятый лес', lines: [
+    ['narr', 'Тропа уходит в чащу. Между стволами мерцают глаза.'],
+    ['spirit', 'Тьма свела с ума зверей и подняла мёртвых. Тапай по экрану — руби всё, что движется!'],
+  ] },
+  boss0_pre: { title: 'Вожак стаи', lines: [
+    ['wolfking', 'Р-р-р… Факелоносец. Мои волки давно не пробовали огня.'],
+    ['spirit', 'Это Мракогрыз, вожак стаи. Тьма сделала его огромным. Следи за его замахами!'],
+    ['hero', 'Тогда пусть попробует сталь.'],
+  ] },
+  boss0_post: { title: 'Лес дышит', lines: [
+    ['spirit', 'Он повержен… Слышишь? Лес снова дышит. Тьма отпустила стаю.'],
+    ['spirit', 'Дальше — Безмолвное кладбище. Там правит Лич. Он крадёт души павших, чтобы питать Короля.'],
+  ] },
+  zone1: { title: 'Глава 2. Безмолвное кладбище', lines: [
+    ['narr', 'Холодный дождь стучит по надгробиям. Вдали звонит колокол, которого нет.'],
+    ['spirit', 'Здесь лежат рыцари нашего Ордена… Не дай Личу поднять их против тебя.'],
+  ] },
+  boss1_pre: { title: 'Лич', lines: [
+    ['lich', 'Тишина… Вот истинный покой. Зачем ты шумишь, живой?'],
+    ['hero', 'Я пришёл за душами моих братьев.'],
+    ['lich', 'Тогда ляг рядом с ними. Места хватит всем.'],
+  ] },
+  boss1_post: { title: 'Тайна Искры', lines: [
+    ['spirit', 'Души свободны… Я чувствую их тепло. Они благодарят тебя.'],
+    ['spirit', 'Знаешь… когда-то я была не просто огоньком. Я была хранительницей Солнечного Сердца. И я не уберегла его.'],
+    ['hero', 'Значит, вернём его вместе.'],
+  ] },
+  zone2: { title: 'Глава 3. Пепельные руины', lines: [
+    ['narr', 'Пепел падает, как снег. Среди руин угадываются обгоревшие знамёна с факелом.'],
+    ['spirit', 'Это наш дом… Крепость Ордена. Её сжёг Пепельный Владыка — правая рука Короля.'],
+  ] },
+  boss2_pre: { title: 'Пепельный Владыка', lines: [
+    ['demon', 'А-а, ещё один уголёк из сгоревшего костра! Я сжёг твой Орден, мальчишка.'],
+    ['demon', 'И твою Искру я задую одним вдохом.'],
+    ['spirit', 'Не слушай его! Его пламя — краденое. Наше — настоящее!'],
+  ] },
+  boss2_post: { title: 'Месть Ордена', lines: [
+    ['spirit', 'Ты отомстил за Орден. Мне… стало теплее. Кажется, я горю ярче.'],
+    ['spirit', 'Осталась лишь Цитадель Тьмы. Король ждёт. Он знает, что мы идём.'],
+  ] },
+  zone3: { title: 'Глава 4. Цитадель Тьмы', lines: [
+    ['narr', 'Небо рвут багровые молнии. Каждая ступень Цитадели шепчет твоё имя.'],
+    ['spirit', 'Его стража — сильнейшие из павших. Уклоняйся от фиолетовых ударов: здесь они смертельны.'],
+  ] },
+  boss3_pre: { title: 'Король Без Солнца', lines: [
+    ['darklord', 'Последний рыцарь Факела. И последняя Искра. Ты принёс мне подарок.'],
+    ['darklord', 'Отдай мне огонь — и я подарю тебе вечный сон без боли.'],
+    ['hero', 'Я пришёл не торговаться. Верни Сердце.'],
+    ['darklord', 'Тогда сгори, как сгорели все до тебя.'],
+  ] },
+  boss3_post: { title: 'Эпилог. Рассвет', lines: [
+    ['narr', 'Король Без Солнца рассыпается чёрным пеплом. Из его доспеха выкатывается тёплый, пульсирующий свет.'],
+    ['spirit', 'Сердце! Солнечное Сердце! Рассвет… я вижу рассвет!'],
+    ['narr', 'Но вскоре свет тускнеет. Из пепла поднимается шёпот: «Тьма не умирает. Она ждёт».'],
+    ['spirit', 'Он вернётся — сильнее. И тьма снова расползётся по землям. Нам придётся идти снова.'],
+    ['spirit', 'В Карте открылся Алтарь душ. Он позволяет начать путь заново, сохранив силу павших. Вспомни о нём, когда станет тяжело.'],
+  ] },
+  cycle: { title: 'Новый круг', lines: [
+    ['spirit', 'Тьма вернулась, и земли стали опаснее прежнего. Но и мы стали сильнее. Вперёд!'],
+  ] },
+  rebirth: { title: 'Перерождение', lines: [
+    ['narr', 'Алтарь вспыхивает. Время закручивается, и ты снова стоишь у кромки Проклятого леса.'],
+    ['spirit', 'Мы помним всё, что было. Души павших теперь в твоём клинке. На этот раз мы дойдём быстрее.'],
+  ] },
+};
+const TIPS = {
+  windup: [['spirit', 'Осторожно! Враг краснеет и над ним «!» — он замахивается. Жми БЛОК, и урон будет меньше.'],
+           ['spirit', 'А если нажмёшь, когда «!» станет голубым, — парируешь удар. Враг будет оглушён, и твои удары станут сильнее.']],
+  heavy:  [['spirit', 'Фиолетовое сияние и «!!» — этот удар заблокировать нельзя!'],
+           ['spirit', 'Свайпни по экрану влево или вправо, чтобы увернуться. Промахнувшись, враг потеряет равновесие.']],
+  elite:  [['spirit', 'Золотое сияние — это элитный враг. Он крепче обычного, но из него выпадет сундук с реликвией.']],
+  chest:  [['spirit', 'Сундук! Внутри три реликвии — выбери одну. Их сила останется с тобой навсегда.']],
+  fire:   [['spirit', 'Я стала сильнее! Теперь я умею метать огненный шар. Жми 💥 — и я ударю по врагу.']],
+  rage:   [['spirit', 'Чувствуешь ярость? Кнопка ⚡ — Берсерк: несколько секунд двойного урона. Береги её для боссов.']],
+  death:  [['spirit', 'Ты пал… но я вернула тебя к костру. Золото и улучшения остались с тобой.'],
+           ['spirit', 'Загляни в Лавку кузнеца — новый клинок или доспех решают многое. А в Карте можно вернуться в пройденные земли и накопить золота.']],
+  lowhp:  [['spirit', 'Ты тяжело ранен! Нажми 🧪 — зелье вылечит половину здоровья.']],
+  combo:  [['spirit', 'Отличная серия! Пока бьёшь без остановки и не пропускаешь удары, растёт комбо — а с ним и урон.']],
+  shop:   [['spirit', 'Золота хватает на улучшение! Кнопка «Лавка» справа светится — загляни к кузнецу.']],
+};
+
+const dlgQueue = [];
+let dlgActive = null;           // { lines, i, done }
+let typeTimer = null, typing = false;
+
+// Show lines once (by key) — or always if key is null. Returns true if something was queued.
+function talk(key, lines, done) {
+  if (key) { if (S.seen[key]) { done && done(); return false; } S.seen[key] = 1; save(); }
+  dlgQueue.push({ lines, i: 0, done });
+  if (!dlgActive) nextDialogue();
+  return true;
+}
+function story(key, done) { return talk('st_' + key, STORY[key].lines, done); }
+function tip(key, done) { return talk('tip_' + key, TIPS[key], done); }
+
+function nextDialogue() {
+  dlgActive = dlgQueue.shift() || null;
+  if (!dlgActive) { $('dlg').classList.add('hidden'); tryResume(); return; }
+  paused = true;
+  $('dlg').classList.remove('hidden');
+  showLine();
+}
+function showLine() {
+  const [who, text] = dlgActive.lines[dlgActive.i];
+  const c = CAST[who];
+  const box = $('dlg');
+  box.classList.toggle('narr', who === 'narr');
+  $('dlgName').textContent = c.name;
+  $('dlgName').style.color = c.color;
+  drawPortrait(who);
+  const el = $('dlgText');
+  el.textContent = '';
+  typing = true;
+  let i = 0;
+  clearInterval(typeTimer);
+  typeTimer = setInterval(() => {
+    i += 1;
+    el.textContent = text.slice(0, i);
+    if (i % 3 === 0 && who !== 'narr') tone(who === 'spirit' ? 900 : who === 'hero' ? 300 : 160, 0.03, 'square', 0.025);
+    if (i >= text.length) { clearInterval(typeTimer); typing = false; }
+  }, 24);
+}
+function advanceDialogue() {
+  if (!dlgActive) return;
+  const [, text] = dlgActive.lines[dlgActive.i];
+  if (typing) { clearInterval(typeTimer); typing = false; $('dlgText').textContent = text; return; }
+  dlgActive.i++;
+  if (dlgActive.i < dlgActive.lines.length) return showLine();
+  const done = dlgActive.done;
+  dlgActive = null;
+  done && done();
+  nextDialogue();
+}
+function skipDialogue() {
+  if (!dlgActive) return;
+  clearInterval(typeTimer); typing = false;
+  const done = dlgActive.done;
+  dlgActive = null;
+  done && done();
+  nextDialogue();
+}
+function drawPortrait(who) {
+  const c = CAST[who], cv2 = $('dlgPic'), g = cv2.getContext('2d');
+  g.imageSmoothingEnabled = false;
+  g.clearRect(0, 0, cv2.width, cv2.height);
+  if (!c.sprite) return;
+  const img = getSprite(c.sprite, c.tint, 'n');
+  const k = Math.floor(Math.min((cv2.width - 4) / img.width, (cv2.height - 4) / img.height));
+  g.drawImage(img, Math.floor((cv2.width - img.width * k) / 2), Math.floor((cv2.height - img.height * k) / 2), img.width * k, img.height * k);
+}
+function anyOverlay() {
+  return !$('hint').classList.contains('hidden') || !$('chest').classList.contains('hidden') ||
+    !$('death').classList.contains('hidden') || !!openSheetId || !!dlgActive || dlgQueue.length > 0;
+}
+function tryResume() { if (!anyOverlay()) paused = false; }
+
+// zone intro: called whenever the player arrives in a zone
+function zoneStory(done) {
+  const cyc = Math.floor(S.zone / ZONES.length);
+  if (cyc === 0) story('zone' + (S.zone % ZONES.length), done);
+  else talk('st_cycle' + cyc, STORY.cycle.lines, done);
 }
 
 // ---------- Rebirth ----------
@@ -852,6 +1081,7 @@ function rebirth() {
   bgCanvas = drawBackground(0); weather = [];
   save(); closeSheets(); updateHud();
   showBanner('ПЕРЕРОЖДЕНИЕ', `Души: ${S.souls}`);
+  talk(null, STORY.rebirth.lines);
   sfx('level');
 }
 
@@ -1209,9 +1439,11 @@ function updateHud() {
   $('potionBtn').classList.toggle('empty', S.potions <= 0);
   $('potionBtn').classList.toggle('pulse', S.potions > 0 && hp < max * 0.3);
   $('flash').classList.toggle('low', !dead && hp < max * 0.25);
+  if (!dead && !paused && hp < max * 0.35 && S.potions > 0 && !S.seen.tip_lowhp) setTimeout(() => tip('lowhp'), 0);
   if (enemy) $('ehpFill').style.width = clamp(enemy.hp / enemy.maxHp * 100, 0, 100) + '%';
   const canBuy = UPGRADES.some((u) => S.up[u.id] < u.max && S.gold >= upCost(u));
   $('shopBtn').classList.toggle('pulse', canBuy);
+  if (canBuy && !paused && S.kills >= 3 && !S.seen.tip_shop) setTimeout(() => tip('shop'), 300);
   $('soulsBox').hidden = S.souls <= 0;
   $('souls').textContent = S.souls;
 }
@@ -1327,6 +1559,17 @@ function openMap() {
   rel.innerHTML = owned.length
     ? owned.map((k) => `<div class="rel" title="${RELICS[k].desc}"><span>${RELICS[k].ico}</span><small>${RELICS[k].name} ×${S.relics[k]}</small><em>${RELICS[k].desc}</em></div>`).join('')
     : '<div class="muted">Пока пусто. Реликвии выпадают из сундуков элитных врагов и боссов.</div>';
+  const sl = $('storyList');
+  sl.innerHTML = '';
+  const seenStory = Object.keys(STORY).filter((k) => S.seen['st_' + k]);
+  if (!seenStory.length) sl.innerHTML = '<div class="muted">Главы появятся здесь по мере прохождения.</div>';
+  for (const k of seenStory) {
+    const b = document.createElement('button');
+    b.className = 'chapter';
+    b.innerHTML = `<span>▶</span>${STORY[k].title}`;
+    b.addEventListener('click', () => { closeSheets(); talk(null, STORY[k].lines); });
+    sl.appendChild(b);
+  }
   $('stats').innerHTML = `Убито врагов: ${S.kills} · Элитных: ${S.elites}<br>Боссов: ${S.bosses} · Перерождений: ${S.rebirths}<br>Парирований: ${S.parries} · Уклонений: ${S.dodges}<br>Лучшее комбо: ${S.bestCombo} · Рекорд волны: ${S.bestWave}<br>Смертей: ${S.deaths}`;
   renderDiff($('mapDiff'));
   $('muteBtn').textContent = S.muted ? '🔇 Звук: выкл' : '🔊 Звук: вкл';
@@ -1340,13 +1583,14 @@ function travel(zi) {
   $('enemyBox').classList.add('hidden');
   save(); updateHud(); closeSheets();
   showBanner(zoneName(zi));
+  zoneStory();
 }
 
 let openSheetId = null;
 function openSheet(id) { closeSheets(); $(id).classList.add('on'); openSheetId = id; paused = true; }
 function closeSheets() {
   document.querySelectorAll('.sheet').forEach((s) => s.classList.remove('on'));
-  if (openSheetId) { openSheetId = null; if ($('hint').classList.contains('hidden') && $('chest').classList.contains('hidden')) paused = false; }
+  if (openSheetId) { openSheetId = null; tryResume(); }
 }
 document.querySelectorAll('[data-close]').forEach((b) => b.addEventListener('click', closeSheets));
 
@@ -1440,8 +1684,10 @@ $('potionBtn').addEventListener('click', drinkPotion);
 $('shopBtn').addEventListener('click', openShop);
 $('mapBtn').addEventListener('click', openMap);
 $('muteBtn').addEventListener('click', () => { S.muted = !S.muted; save(); $('muteBtn').textContent = S.muted ? '🔇 Звук: выкл' : '🔊 Звук: вкл'; });
-$('startBtn').addEventListener('click', () => { audio(); S.seenHint = true; S.seenV2 = true; save(); $('hint').classList.add('hidden'); paused = false; });
+$('startBtn').addEventListener('click', () => { audio(); S.seenHint = true; S.seenV2 = true; save(); $('hint').classList.add('hidden'); paused = false; story('prologue'); zoneStory(); });
 $('reviveBtn').addEventListener('click', revive);
+$('dlg').addEventListener('pointerdown', (e) => { e.preventDefault(); if (e.target.id !== 'dlgSkip') advanceDialogue(); });
+$('dlgSkip').addEventListener('pointerdown', (e) => { e.preventDefault(); e.stopPropagation(); skipDialogue(); });
 $('deathShopBtn').addEventListener('click', () => { revive(); openShop(); });
 document.addEventListener('gesturestart', (e) => e.preventDefault());
 document.addEventListener('dblclick', (e) => e.preventDefault());

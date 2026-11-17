@@ -176,3 +176,22 @@ h3.sub { font-size: 10px; color: var(--gold); margin: 14px 2px 8px; }
 .diff small { font-size: 7px; color: var(--muted); }
 .diff.on { box-shadow: inset 0 0 0 2px var(--gold); color: var(--gold); }
 .ver { margin-top: 10px; font-size: 7px; color: var(--muted); text-align: center; }
+
+/* ---------- dialogue ---------- */
+.dlg { position: fixed; inset: 0; z-index: 25; background: linear-gradient(transparent 45%, rgba(5,2,12,.85)); display: flex; flex-direction: column; justify-content: flex-end; padding: 0 10px calc(env(safe-area-inset-bottom) + 16px); }
+.dlg.hidden { display: none; }
+.dlg-box { position: relative; display: flex; gap: 10px; align-items: flex-start; background: var(--panel); border: 4px solid #000; box-shadow: inset 0 0 0 3px var(--edge), 0 6px 0 #000; padding: 12px 12px 22px; min-height: 104px; animation: dlgIn .25s; }
+@keyframes dlgIn { from { transform: translateY(20px); opacity: 0; } }
+#dlgPic { width: 64px; height: 64px; flex: 0 0 auto; image-rendering: pixelated; background: #0b0714; border: 2px solid #000; box-shadow: inset 0 0 0 2px #31244d; }
+.dlg-body { flex: 1; min-width: 0; }
+.dlg-name { font-size: 10px; margin-bottom: 8px; text-shadow: 2px 2px 0 #000; }
+.dlg-text { font-size: 10px; line-height: 1.9; color: var(--ink); min-height: 3.8em; }
+.dlg-next { position: absolute; right: 12px; bottom: 6px; font-size: 9px; color: var(--gold); animation: blink 1s infinite; }
+@keyframes blink { 50% { opacity: 0; } }
+.dlg.narr #dlgPic { display: none; }
+.dlg.narr .dlg-name { display: none; }
+.dlg.narr .dlg-text { color: #c8bcd8; text-align: center; font-size: 9px; padding: 6px 4px; }
+.dlg-skip { align-self: flex-end; margin-top: 10px; padding: 8px 12px; background: rgba(0,0,0,.6); border: 2px solid #000; font-size: 8px; color: var(--muted); }
+.story-list { display: grid; gap: 6px; }
+.chapter { display: flex; gap: 10px; align-items: center; width: 100%; text-align: left; background: var(--panel-2); border: 2px solid #000; padding: 10px; font-size: 8px; }
+.chapter span { color: var(--gold); }
