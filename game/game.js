@@ -301,28 +301,28 @@ const gw = () => S.zone * 10 + S.wave;
 const soulMul = () => 1 + S.souls * 0.1;
 const baseDmg = (sw = S.up.sword) => (5 * Math.pow(1.3, sw) + (S.lvl - 1) * 0.6) * soulMul() * (1 + rl('fang') * 0.08);
 const pDmg = () => baseDmg() * (berserkT > 0 ? 2 : 1);
-const hpOf = (ar = S.up.armor) => Math.round((50 + (S.lvl - 1) * 8) * Math.pow(1.22, ar) * (1 + rl('heart') * 0.1));
+const hpOf = (ar = S.up.armor) => Math.round((50 + (S.lvl - 1) * 5) * Math.pow(1.18, ar) * (1 + rl('heart') * 0.1));
 const pMaxHp = () => hpOf();
 const pCrit = (lv = S.up.crit) => Math.min(0.8, 0.05 + lv * 0.04 + rl('eye') * 0.04 + (berserkT > 0 ? 0.25 : 0));
 const pCritMul = (lv = S.up.crit) => 2 + lv * 0.1;
 const pBurn = (lv = S.up.torch) => lv * 0.4 * (1 + rl('ember') * 0.25);
-const pLeech = (lv = S.up.leech) => lv * 0.012 + rl('leech') * 0.008;
+const pLeech = (lv = S.up.leech) => lv * 0.007 + rl('leech') * 0.005;
 const goldMul = () => soulMul() * (1 + rl('skull') * 0.12);
 const xpNeed = () => Math.round(20 * Math.pow(1.32, S.lvl - 1));
-const potionCost = () => Math.round(15 + gw() * 4 * Math.pow(1.04, gw()));
-const parryWin = () => 0.4 + rl('glass') * 0.05;
-const dodgeWin = () => 0.5 + rl('glass') * 0.05;
-const blockReduce = () => Math.min(0.95, 0.75 + rl('ring') * 0.04);
+const potionCost = () => Math.round(25 + gw() * 6 * Math.pow(1.06, gw()));
+const parryWin = () => 0.3 + rl('glass') * 0.04;
+const dodgeWin = () => 0.42 + rl('glass') * 0.04;
+const blockReduce = () => Math.min(0.9, 0.6 + rl('ring') * 0.04);
 const comboMax = () => 1 + rl('song') * 0.25;  // max bonus (1 = +100%)
-const comboMul = () => 1 + Math.min(comboMax(), combo * 0.02);
+const comboMul = () => 1 + Math.min(comboMax(), combo * 0.012);
 const eliteChance = () => (gw() > 3 ? 0.07 + rl('star') * 0.03 : 0);
 const skillCdMul = () => Math.max(0.4, 1 - rl('hourfire') * 0.1);
-const goldPerKill = (g) => 4 * Math.pow(1.19, g - 1) * goldMul();
+const goldPerKill = (g) => 3 * Math.pow(1.18, g - 1) * goldMul();
 
 const UPGRADES = [
-  { id: 'sword', ico: '⚔', name: 'Клинок', base: 12, grow: 1.4, max: 999,
+  { id: 'sword', ico: '⚔', name: 'Клинок', base: 14, grow: 1.48, max: 999,
     desc: () => `Урон ${nf(baseDmg())} → <b>${nf(baseDmg(S.up.sword + 1))}</b>` },
-  { id: 'armor', ico: '🛡', name: 'Доспех', base: 15, grow: 1.42, max: 999,
+  { id: 'armor', ico: '🛡', name: 'Доспех', base: 18, grow: 1.5, max: 999,
     desc: () => `Здоровье ${nf(hpOf())} → <b>${nf(hpOf(S.up.armor + 1))}</b>` },
   { id: 'crit', ico: '🎯', name: 'Ярость', base: 30, grow: 1.55, max: 15,
     desc: () => `Крит ${Math.round(pCrit() * 100)}% ×${pCritMul().toFixed(1)} → <b>${Math.round(pCrit(S.up.crit + 1) * 100)}% ×${pCritMul(S.up.crit + 1).toFixed(1)}</b>` },
@@ -538,14 +538,14 @@ function spawnEnemy() {
   const elite = !isBoss && Math.random() < eliteChance();
   const sp = SPRITES[key];
   const g = gw();
-  const maxHp = 18 * Math.pow(1.21, g - 1) * sp.hp * (isBoss ? 6 : 1) * (elite ? 3 : 1);
+  const maxHp = 24 * Math.pow(1.24, g - 1) * sp.hp * (isBoss ? 9 : 1) * (elite ? 3.5 : 1);
   enemy = {
     key, tint, name, boss: isBoss, elite,
     hp: maxHp, maxHp,
-    dmg: 4 * Math.pow(1.15, g - 1) * sp.dmg * (isBoss ? 1.5 : 1) * (elite ? 1.3 : 1),
+    dmg: 6 * Math.pow(1.17, g - 1) * sp.dmg * (isBoss ? 1.7 : 1) * (elite ? 1.4 : 1),
     phase: 'approach', t: 0, approachDur: isBoss ? 1.6 : 0.9,
-    idle: rand(1.2, 2.0) * sp.spd + 0.6,
-    heavyChance: g <= 3 ? 0 : (isBoss ? 0.35 : sp.heavy),
+    idle: rand(0.9, 1.6) * sp.spd + 0.4,
+    heavyChance: g <= 2 ? 0 : Math.min(0.5, (isBoss ? 0.4 : sp.heavy) + S.zone * 0.04),
     kind: 'normal', windupDur: 0.78,
     flash: 0, flinch: 0, lunge: 0, stun: 0, dodged: false, wobble: Math.random() * 6,
     scale: 5 * (isBoss ? 1.45 : elite ? 1.15 : 1),
@@ -602,7 +602,7 @@ function updateEnemy(dt) {
 function setPhase(p, idle) { enemy.phase = p; enemy.t = 0; if (idle !== undefined) enemy.idle = idle; }
 function startWindup() {
   enemy.kind = Math.random() < enemy.heavyChance ? 'heavy' : 'normal';
-  enemy.windupDur = enemy.kind === 'heavy' ? 1.05 : (enemy.boss ? 0.62 : 0.78);
+  enemy.windupDur = enemy.kind === 'heavy' ? 0.95 : (enemy.boss ? 0.55 : 0.7);
   enemy.dodged = false;
   setPhase('windup');
   sfx(enemy.kind === 'heavy' ? 'heavy' : 'windup');
@@ -635,7 +635,7 @@ function enemyStrike() {
   if (rl('thorns')) { enemy.hp -= dmg * 0.4 * rl('thorns'); if (enemy.hp <= 0) { hp -= dmg; return killEnemy(); } }
   hp -= dmg;
   floatNum('-' + nf(dmg), 'hurt', 0.5 + rand(-0.15, 0.15), 0.78);
-  setPhase('idle', rand(1.0, 1.9) * SPRITES[enemy.key].spd);
+  setPhase('idle', rand(0.7, 1.4) * SPRITES[enemy.key].spd * (enemy.boss ? 0.8 : 1));
   if (hp <= 0) die();
   updateHud();
 }
@@ -652,7 +652,7 @@ function killEnemy() {
   floatNum('+' + nf(gold), 'gold', (r.x + r.w / 2) / LW, (r.y + r.h * 0.3) / LH);
   dissolve(r);
   coins(r.x + r.w / 2, r.y + r.h * 0.6, boss ? 18 : elite ? 10 : 5);
-  heal(pMaxHp() * 0.15, false);
+  heal(pMaxHp() * 0.06, false);
   hitStop = 0.07;
   sfx('kill');
   enemy = null; spawnTimer = 0.7;
@@ -670,7 +670,7 @@ function killEnemy() {
     }), 700);
   } else {
     S.wave++;
-    if (Math.random() < 0.06) { S.potions++; floatNum('+🧪', 'heal', 0.5, 0.5); }
+    if (Math.random() < 0.025) { S.potions++; floatNum('+🧪', 'heal', 0.5, 0.5); }
     if (elite) { spawnTimer = 99; setTimeout(() => openChest('Сундук элиты', () => { spawnTimer = 0.6; }), 600); }
   }
   S.bestWave = Math.max(S.bestWave, gw());
@@ -764,7 +764,7 @@ function useSkill(id) {
 function fireballHit() {
   if (!enemy) return;
   const r = enemyRect();
-  const dmg = baseDmg() * 10 * (berserkT > 0 ? 2 : 1) * rand(0.95, 1.05);
+  const dmg = baseDmg() * 6 * (berserkT > 0 ? 2 : 1) * rand(0.95, 1.05);
   enemy.hp -= dmg; enemy.flash = 0.15;
   floatNum(nf(dmg), 'crit', 0.5, (r.y + r.h * 0.4) / LH);
   explosion(r.x + r.w / 2, r.y + r.h * 0.5);
@@ -1461,7 +1461,7 @@ if (S.seenHint && S.seenV2) { $('hint').classList.add('hidden'); paused = false;
 if (S.lastSeen && S.kills > 0) {
   const mins = Math.min(480, (Date.now() - S.lastSeen) / 60000);
   if (mins >= 2) {
-    const g = Math.round(mins * goldPerKill(Math.max(1, gw() - 2)) * 1.5);
+    const g = Math.round(mins * goldPerKill(Math.max(1, gw() - 3)) * 0.8);
     S.gold += g; save();
     setTimeout(() => showBanner('ПОКА ТЕБЯ НЕ БЫЛО', `+${nf(g)} золота`, 3200), 600);
   }
