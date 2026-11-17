@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>Тёмный путь</title>
+<meta name="description" content="Пиксельная игра в стиле тёмного фэнтези: бей врагов, парируй удары, качай героя">
+<meta name="theme-color" content="#0b0714">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Тёмный путь">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="manifest" href="manifest.json">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap&subset=cyrillic" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<canvas id="cv"></canvas>
+<div id="fx"></div>
+<div id="flash"></div>
+
+<!-- HUD -->
+<div class="hud-top">
+  <div class="row">
+    <div class="lvl" id="lvl">1</div>
+    <div class="bars">
+      <div class="bar hp"><span id="hpFill"></span><em id="hpText">50/50</em></div>
+      <div class="bar xp"><span id="xpFill"></span></div>
+    </div>
+    <div class="gold"><i class="coin"></i><span id="gold">0</span></div>
+  </div>
+  <div class="zone-line"><span id="zoneName">Проклятый лес</span> · <span id="wave">Волна 1/10</span></div>
+  <div class="enemy-box" id="enemyBox">
+    <div class="enemy-name" id="enemyName">Скелет</div>
+    <div class="bar ehp"><span id="ehpFill"></span></div>
+  </div>
+</div>
+
+<div class="hud-bottom">
+  <button class="sbtn" id="potionBtn"><span class="ico">🧪</span><b id="potionCount">1</b></button>
+  <button class="block-btn" id="blockBtn"><span class="ico">🛡</span>БЛОК</button>
+  <button class="sbtn" id="shopBtn"><span class="ico">⚒</span><b>Лавка</b></button>
+  <button class="sbtn" id="mapBtn"><span class="ico">🗺</span><b>Карта</b></button>
+</div>
+
+<div class="banner" id="banner"></div>
+
+<!-- Hint -->
+<div class="overlay" id="hint">
+  <div class="panel">
+    <h1>ТЁМНЫЙ ПУТЬ</h1>
+    <p>⚔ <b>Тапай по экрану</b> — бей врага.</p>
+    <p>🛡 Враг <b>краснеет и замахивается</b> — жми <b>БЛОК</b> в последний момент. Поймал момент — <b>парирование</b>: враг оглушён, а твои удары по нему сильнее.</p>
+    <p>⚒ За золото покупай улучшения в <b>Лавке</b>. Каждая 10-я волна — <b>босс</b>.</p>
+    <button class="big" id="startBtn">В путь</button>
+  </div>
+</div>
+
+<!-- Death -->
+<div class="overlay hidden" id="death">
+  <div class="panel">
+    <h1 class="red">ТЫ ПАЛ</h1>
+    <p id="deathText">Тьма поглотила тебя на волне 7.</p>
+    <p class="muted">Золото и улучшения остаются с тобой. Улучши снаряжение и попробуй снова.</p>
+    <button class="big" id="reviveBtn">Вернуться к костру</button>
+    <button class="big ghost" id="deathShopBtn">Лавка</button>
+  </div>
+</div>
+
+<!-- Shop -->
+<div class="sheet" id="shop">
+  <div class="sheet-head"><h2>Лавка кузнеца</h2><div class="gold"><i class="coin"></i><span id="shopGold">0</span></div><button class="x" data-close>✕</button></div>
+  <div id="shopList"></div>
+</div>
+
+<!-- Map -->
+<div class="sheet" id="map">
+  <div class="sheet-head"><h2>Карта</h2><button class="x" data-close>✕</button></div>
+  <div id="mapList"></div>
+  <div class="stats" id="stats"></div>
+  <button class="mute" id="muteBtn">🔊 Звук: вкл</button>
+</div>
+
+<script src="game.js"></script>
+</body>
+</html>
