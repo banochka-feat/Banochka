@@ -349,9 +349,15 @@ $('resetBtn').addEventListener('click', () => {
 });
 
 // amount inputs grow with their text so ₽ sits right after the number
+// (measured with a hidden copy of the text in the same font)
+const measurer = document.createElement('span');
+measurer.style.cssText = 'position:absolute;visibility:hidden;white-space:pre;left:-9999px;top:0';
+document.body.appendChild(measurer);
 function fitAmount(input) {
-  const len = (input.value || input.placeholder || '0').length;
-  input.style.width = Math.max(1.2, len * 0.62 + 0.4) + 'em';
+  const cs = getComputedStyle(input);
+  for (const k of ['fontFamily', 'fontSize', 'fontWeight', 'letterSpacing', 'fontVariantNumeric']) measurer.style[k] = cs[k];
+  measurer.textContent = input.value || input.placeholder || '0';
+  input.style.width = Math.ceil(measurer.getBoundingClientRect().width) + 6 + 'px';
 }
 ['fAmount', 'gAmount'].forEach((id) => {
   const el = $(id);
@@ -362,6 +368,22 @@ const _openDeposit = openDeposit;
 openDeposit = function (dep) { _openDeposit(dep); fitAmount($('fAmount')); };
 $('goalBtn').addEventListener('click', () => fitAmount($('gAmount')));
 $('quick').addEventListener('click', () => fitAmount($('fAmount')));
+
+// keep the open sheet above the iPhone keyboard
+function fitToKeyboard() {
+  const vv = window.visualViewport;
+  if (!vv) return;
+  const kb = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
+  const root = document.documentElement.style;
+  root.setProperty('--kb', kb + 'px');
+  root.setProperty('--vvh', vv.height + 'px');
+  document.body.classList.toggle('kb-open', kb > 80);
+}
+if (window.visualViewport) {
+  visualViewport.addEventListener('resize', fitToKeyboard);
+  visualViewport.addEventListener('scroll', fitToKeyboard);
+  fitToKeyboard();
+}
 
 // ---------- Toast ----------
 let toastTimer;

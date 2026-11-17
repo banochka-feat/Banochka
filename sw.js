@@ -1,6 +1,6 @@
 // Service worker: makes the app open without internet.
 // Bump VERSION after changing any file so phones pick up the update.
-const VERSION = 'banochka-v1';
+const VERSION = 'banochka-v2';
 const FILES = [
   './',
   'index.html',
