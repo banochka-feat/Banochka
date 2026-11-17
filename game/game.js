@@ -279,7 +279,7 @@ const DEFAULT = {
   up: { sword: 0, armor: 0, crit: 0, torch: 0, leech: 0 },
   relics: {}, souls: 0, rebirths: 0,
   kills: 0, bosses: 0, deaths: 0, parries: 0, dodges: 0, elites: 0, bestWave: 1, bestCombo: 0,
-  muted: false, seenHint: false, seenV2: false, lastSeen: 0,
+  diff: 'easy', muted: false, seenHint: false, seenV2: false, lastSeen: 0,
 };
 let S = load();
 function load() {
@@ -298,6 +298,12 @@ function save() { S.lastSeen = Date.now(); try { localStorage.setItem(SAVE_KEY, 
 // STATS & ECONOMY
 // =========================================================
 const gw = () => S.zone * 10 + S.wave;
+const DIFFS = {
+  easy:   { name: 'Лёгкий',  mul: 1,   ico: '🌙' },
+  normal: { name: 'Средний', mul: 1.2, ico: '🔥' },
+  hard:   { name: 'Сложный', mul: 1.7, ico: '💀' },
+};
+const diff = () => DIFFS[S.diff] || DIFFS.easy;
 const soulMul = () => 1 + S.souls * 0.1;
 const baseDmg = (sw = S.up.sword) => (5 * Math.pow(1.3, sw) + (S.lvl - 1) * 0.6) * soulMul() * (1 + rl('fang') * 0.08);
 const pDmg = () => baseDmg() * (berserkT > 0 ? 2 : 1);
@@ -538,11 +544,11 @@ function spawnEnemy() {
   const elite = !isBoss && Math.random() < eliteChance();
   const sp = SPRITES[key];
   const g = gw();
-  const maxHp = 24 * Math.pow(1.24, g - 1) * sp.hp * (isBoss ? 9 : 1) * (elite ? 3.5 : 1);
+  const maxHp = 24 * Math.pow(1.24, g - 1) * sp.hp * (isBoss ? 9 : 1) * (elite ? 3.5 : 1) * diff().mul;
   enemy = {
     key, tint, name, boss: isBoss, elite,
     hp: maxHp, maxHp,
-    dmg: 6 * Math.pow(1.17, g - 1) * sp.dmg * (isBoss ? 1.7 : 1) * (elite ? 1.4 : 1),
+    dmg: 6 * Math.pow(1.17, g - 1) * sp.dmg * (isBoss ? 1.7 : 1) * (elite ? 1.4 : 1) * diff().mul,
     phase: 'approach', t: 0, approachDur: isBoss ? 1.6 : 0.9,
     idle: rand(0.9, 1.6) * sp.spd + 0.4,
     heavyChance: g <= 2 ? 0 : Math.min(0.5, (isBoss ? 0.4 : sp.heavy) + S.zone * 0.04),
@@ -1197,6 +1203,7 @@ function updateHud() {
   $('lvl').textContent = S.lvl;
   $('gold').textContent = nf(S.gold);
   $('zoneName').textContent = zoneName(S.zone);
+  $('diffBadge').textContent = diff().ico;
   $('wave').textContent = S.wave === 10 ? 'БОСС' : `Волна ${S.wave}/10`;
   $('potionCount').textContent = S.potions;
   $('potionBtn').classList.toggle('empty', S.potions <= 0);
@@ -1271,6 +1278,22 @@ function renderShop() {
   list.appendChild(row);
 }
 
+// ---------- Difficulty ----------
+function renderDiff(box) {
+  box.innerHTML = '';
+  for (const [id, d] of Object.entries(DIFFS)) {
+    const b = document.createElement('button');
+    b.className = 'diff' + ((S.diff || 'easy') === id ? ' on' : '');
+    b.innerHTML = `<span>${d.ico}</span>${d.name}<small>${d.mul === 1 ? 'обычные враги' : 'враги ×' + d.mul}</small>`;
+    b.addEventListener('click', () => {
+      S.diff = id; save(); updateHud();
+      document.querySelectorAll('.diff-box').forEach(renderDiff);
+      if (!paused && enemy) floatNum(d.name, 'word', 0.5, 0.5);
+    });
+    box.appendChild(b);
+  }
+}
+
 // ---------- Map ----------
 function openMap() {
   const list = $('mapList');
@@ -1305,6 +1328,7 @@ function openMap() {
     ? owned.map((k) => `<div class="rel" title="${RELICS[k].desc}"><span>${RELICS[k].ico}</span><small>${RELICS[k].name} ×${S.relics[k]}</small><em>${RELICS[k].desc}</em></div>`).join('')
     : '<div class="muted">Пока пусто. Реликвии выпадают из сундуков элитных врагов и боссов.</div>';
   $('stats').innerHTML = `Убито врагов: ${S.kills} · Элитных: ${S.elites}<br>Боссов: ${S.bosses} · Перерождений: ${S.rebirths}<br>Парирований: ${S.parries} · Уклонений: ${S.dodges}<br>Лучшее комбо: ${S.bestCombo} · Рекорд волны: ${S.bestWave}<br>Смертей: ${S.deaths}`;
+  renderDiff($('mapDiff'));
   $('muteBtn').textContent = S.muted ? '🔇 Звук: выкл' : '🔊 Звук: вкл';
   openSheet('map');
 }
@@ -1466,6 +1490,7 @@ if (S.lastSeen && S.kills > 0) {
     setTimeout(() => showBanner('ПОКА ТЕБЯ НЕ БЫЛО', `+${nf(g)} золота`, 3200), 600);
   }
 }
+renderDiff($('hintDiff'));
 updateHud();
 updateSkillsHud();
 requestAnimationFrame(loop);

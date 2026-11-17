@@ -34,7 +34,7 @@
     <div class="gold"><i class="coin"></i><span id="gold">0</span></div>
   </div>
   <div class="souls" id="soulsBox" hidden>👻 <span id="souls">0</span></div>
-  <div class="zone-line"><span id="zoneName">Проклятый лес</span> · <span id="wave">Волна 1/10</span></div>
+  <div class="zone-line"><span id="diffBadge">🌙</span> <span id="zoneName">Проклятый лес</span> · <span id="wave">Волна 1/10</span></div>
   <div class="enemy-box" id="enemyBox">
     <div class="enemy-name" id="enemyName">Скелет</div>
     <div class="bar ehp"><span id="ehpFill"></span></div>
@@ -65,6 +65,8 @@
     <p>🛡 <b class="r">Красный «!»</b> — жми <b>БЛОК</b>. Нажал, когда «!» стал голубым, — <b>парирование</b>: враг оглушён.</p>
     <p>💨 <b class="v">Фиолетовый «!!»</b> — удар не блокируется. <b>Свайпни</b> влево или вправо, чтобы увернуться.</p>
     <p>💥 ⚡ Навыки откроются на 3 и 7 уровне. ★ Элиты и боссы дают <b>сундук с реликвией</b>.</p>
+    <p class="center">Сложность (можно сменить в «Карте»):</p>
+    <div class="diff-box" id="hintDiff"></div>
     <button class="big" id="startBtn">В путь</button>
   </div>
 </div>
@@ -99,6 +101,8 @@
 <div class="sheet" id="map">
   <div class="sheet-head"><h2>Карта</h2><button class="x" data-close>✕</button></div>
   <div id="mapList"></div>
+  <h3 class="sub">Сложность</h3>
+  <div class="diff-box" id="mapDiff"></div>
   <div class="altar" id="altar"></div>
   <h3 class="sub">Реликвии</h3>
   <div class="relics" id="relicList"></div>
