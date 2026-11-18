@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>Баночка</title>
+<meta name="description" content="Копилка: записывай вложения и следи за прогрессом">
+<meta name="theme-color" content="#0f1115" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#f4f1ea" media="(prefers-color-scheme: light)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Баночка">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" href="icons/icon-192.png">
+<link rel="manifest" href="manifest.json">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="app">
+
+  <header class="top">
+    <div class="brand">
+      <span class="brand-dot"></span> Баночка
+    </div>
+    <button class="icon-btn" id="menuBtn" aria-label="Меню">
+      <svg viewBox="0 0 24 24" width="22" height="22"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
+    </button>
+  </header>
+
+  <!-- Hero: jar + total -->
+  <section class="hero card">
+    <div class="jar-wrap">
+      <svg class="jar" viewBox="0 0 120 150" aria-hidden="true">
+        <defs>
+          <clipPath id="jarClip">
+            <path d="M24 34 h72 a10 10 0 0 1 10 10 v86 a14 14 0 0 1 -14 14 h-64 a14 14 0 0 1 -14 -14 v-86 a10 10 0 0 1 10 -10z"/>
+          </clipPath>
+          <linearGradient id="liquid" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" style="stop-color: var(--accent-2)"/>
+            <stop offset="1" style="stop-color: var(--accent)"/>
+          </linearGradient>
+        </defs>
+        <rect x="30" y="8" width="60" height="18" rx="5" class="jar-lid"/>
+        <rect x="26" y="24" width="68" height="8" rx="3" class="jar-lid-rim"/>
+        <g clip-path="url(#jarClip)">
+          <rect x="0" y="0" width="120" height="150" class="jar-glass-fill"/>
+          <g id="liquidGroup" style="transform: translateY(150px)">
+            <path class="wave wave-back" d="M0 6 Q15 0 30 6 T60 6 T90 6 T120 6 T150 6 T180 6 T210 6 T240 6 V200 H0Z"/>
+            <path class="wave wave-front" fill="url(#liquid)" d="M0 6 Q15 12 30 6 T60 6 T90 6 T120 6 T150 6 T180 6 T210 6 T240 6 V200 H0Z"/>
+          </g>
+        </g>
+        <path class="jar-outline" d="M24 34 h72 a10 10 0 0 1 10 10 v86 a14 14 0 0 1 -14 14 h-64 a14 14 0 0 1 -14 -14 v-86 a10 10 0 0 1 10 -10z"/>
+        <path class="jar-shine" d="M26 52 v62"/>
+      </svg>
+      <div class="jar-pct" id="jarPct">0%</div>
+    </div>
+
+    <div class="hero-info">
+      <div class="label">В баночке</div>
+      <div class="total" id="total">0 ₽</div>
+      <button class="goal-chip" id="goalBtn">
+        <span id="goalText">Поставить цель</span>
+        <svg viewBox="0 0 24 24" width="14" height="14"><path d="M4 20h4l10-10-4-4L4 16v4z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+      </button>
+      <div class="progress" id="progressWrap" hidden>
+        <div class="progress-bar"><span id="progressBar"></span></div>
+        <div class="progress-left" id="progressLeft"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Stats -->
+  <section class="stats">
+    <div class="stat card"><div class="stat-v" id="statMonth">0 ₽</div><div class="stat-l">за этот месяц</div></div>
+    <div class="stat card"><div class="stat-v" id="statCount">0</div><div class="stat-l">вложений</div></div>
+    <div class="stat card"><div class="stat-v" id="statAvg">0 ₽</div><div class="stat-l">в среднем</div></div>
+  </section>
+
+  <!-- Chart -->
+  <section class="card chart-card" id="chartCard" hidden>
+    <div class="section-head">
+      <h2>Рост накоплений</h2>
+      <div class="seg" id="rangeSeg">
+        <button data-range="30">30 д</button>
+        <button data-range="90">90 д</button>
+        <button data-range="365">Год</button>
+        <button data-range="all" class="on">Всё</button>
+      </div>
+    </div>
+    <div class="chart" id="chart"></div>
+    <div class="chart-axis"><span id="axisStart"></span><span id="axisEnd"></span></div>
+  </section>
+
+  <!-- History -->
+  <section class="history">
+    <div class="section-head"><h2>История</h2></div>
+    <div id="history"></div>
+    <div class="empty card" id="empty">
+      <div class="empty-emoji">🫙</div>
+      <div class="empty-t">Баночка пока пустая</div>
+      <div class="empty-s">Нажми «Вложить», чтобы записать первое пополнение</div>
+    </div>
+  </section>
+
+  <div class="bottom-space"></div>
+</div>
+
+<button class="fab" id="addBtn">
+  <svg viewBox="0 0 24 24" width="22" height="22"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg>
+  Вложить
+</button>
+
+<!-- Deposit sheet -->
+<div class="sheet-backdrop" id="sheetBackdrop"></div>
+<form class="sheet" id="sheet" autocomplete="off">
+  <div class="sheet-grip"></div>
+  <h3 id="sheetTitle">Новое вложение</h3>
+  <label class="amount-field">
+    <input id="fAmount" type="text" inputmode="decimal" placeholder="0" required>
+    <span>₽</span>
+  </label>
+  <div class="quick" id="quick">
+    <button type="button" data-add="100">+100</button>
+    <button type="button" data-add="500">+500</button>
+    <button type="button" data-add="1000">+1 000</button>
+    <button type="button" data-add="5000">+5 000</button>
+  </div>
+  <label class="field">
+    <span>Когда</span>
+    <input id="fDate" type="datetime-local" required>
+  </label>
+  <label class="field">
+    <span>Комментарий</span>
+    <input id="fNote" type="text" maxlength="80" placeholder="Например: с зарплаты">
+  </label>
+  <div class="sheet-actions">
+    <button type="button" class="btn danger" id="deleteBtn" hidden>Удалить</button>
+    <button type="submit" class="btn primary" id="saveBtn">Сохранить</button>
+  </div>
+</form>
+
+<!-- Goal sheet -->
+<form class="sheet" id="goalSheet" autocomplete="off">
+  <div class="sheet-grip"></div>
+  <h3>Цель накоплений</h3>
+  <label class="field">
+    <span>На что копим</span>
+    <input id="gName" type="text" maxlength="40" placeholder="Например: новый iPhone">
+  </label>
+  <label class="amount-field small">
+    <input id="gAmount" type="text" inputmode="decimal" placeholder="Сумма цели">
+    <span>₽</span>
+  </label>
+  <div class="sheet-actions">
+    <button type="button" class="btn ghost" id="goalClear">Убрать цель</button>
+    <button type="submit" class="btn primary">Сохранить</button>
+  </div>
+</form>
+
+<!-- Menu sheet -->
+<div class="sheet" id="menuSheet">
+  <div class="sheet-grip"></div>
+  <h3>Данные</h3>
+  <p class="hint">Записи хранятся только на этом устройстве. Сохраняй резервную копию, чтобы ничего не потерять.</p>
+  <button class="menu-item" id="exportBtn">💾 Сохранить резервную копию</button>
+  <button class="menu-item" id="importBtn">📂 Восстановить из копии</button>
+  <button class="menu-item danger" id="resetBtn">🗑 Очистить всё</button>
+  <input type="file" id="importFile" accept="application/json,.json" hidden>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="app.js"></script>
+</body>
+</html>
